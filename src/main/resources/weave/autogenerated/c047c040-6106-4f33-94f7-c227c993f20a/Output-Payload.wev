@@ -1,0 +1,10 @@
+%dw 2.0
+
+type auto_c047c040_6106_4f33_94f7_c227c993f20a_Output_Payload = {
+  city: String, 
+  name: String, 
+  id: Number, 
+  email: String, 
+  _?: Any
+}
+

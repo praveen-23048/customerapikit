@@ -1,0 +1,174 @@
+#%RAML 1.0
+
+title: Customer-API
+
+baseUri: https://api.example.com/api/{version}
+version: v1
+
+traits:
+  client-id-required:
+    headers:
+      client_id:
+        type: string
+      client_secret:
+        type: string
+    responses:
+      401:
+        description: Unauthorized or invalid client application credentials
+      500:
+        description: Bad response from authorization server
+
+types:
+  Customer:
+    type: object
+    properties:
+      id:
+        type: integer
+        required: true
+        example: 1
+      name:
+        type: string
+        required: true
+        example: Praveen
+      email:
+        type: string
+        required: true
+        example: praveen@gmail.com
+      city:
+        type: string
+        required: true
+        example: Hyderabad
+
+/customers:
+
+  get:
+    is: [client-id-required]
+    description: Fetch all customers
+    responses:
+      200:
+        body:
+          application/json:
+            type: Customer[]
+            example:
+              [
+                {
+                  "id": 1,
+                  "name": "Praveen",
+                  "email": "praveen@gmail.com",
+                  "city": "Hyderabad"
+                }
+              ]
+
+  post:
+    is: [client-id-required]
+    description: Create a new customer
+    body:
+      application/json:
+        type: Customer
+        example:
+          {
+            "id": 10,
+            "name": "Kiran",
+            "email": "kiran@gmail.com",
+            "city": "Chennai"
+          }
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              {
+                "message": "Customer created successfully"
+              }
+      400:
+        body:
+          application/json:
+            example:
+              {
+                "message": "Required customer field is missing"
+              }
+      409:
+        body:
+          application/json:
+            example:
+              {
+                "message": "Customer with this ID already exists"
+              }
+
+  /{id}:
+    uriParameters:
+      id:
+        description: Unique ID of the customer
+        type: integer
+        example: 1
+
+    get:
+      is: [client-id-required]
+      description: Fetch a customer by ID
+      responses:
+        200:
+          body:
+            application/json:
+              type: Customer
+              example:
+                {
+                  "id": 1,
+                  "name": "Praveen",
+                  "email": "praveen@gmail.com",
+                  "city": "Hyderabad"
+                }
+        404:
+          body:
+            application/json:
+              example:
+                {
+                  "message": "Customer not found"
+                }
+
+    put:
+      is: [client-id-required]
+      description: Update an existing customer
+      body:
+        application/json:
+          type: Customer
+          example:
+            {
+              "id": 1,
+              "name": "Praveen Updated",
+              "email": "praveen.updated@gmail.com",
+              "city": "Hyderabad"
+            }
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                {
+                  "message": "Customer updated successfully"
+                }
+        404:
+          body:
+            application/json:
+              example:
+                {
+                  "message": "Customer not found"
+                }
+
+    delete:
+      is: [client-id-required]
+      description: Delete a customer by ID
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                {
+                  "message": "Customer deleted successfully"
+                }
+        404:
+          body:
+            application/json:
+              example:
+                {
+                  "message": "Customer not found"
+                }

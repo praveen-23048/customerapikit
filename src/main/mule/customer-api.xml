@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="         http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd         http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd         http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd         http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd         http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+    <!-- Global HTTP Listener Config -->
+    <http:listener-config name="customer-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8083" />
+    </http:listener-config>
+    <!-- APIKit Router Config -->
+    <apikit:config name="customer-api-config" api="customer-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <!-- MySQL Database Config -->
+    <db:config name="Database_Config" doc:name="Database Config" doc:id="84dc09b5-bd7d-4765-acf2-738fc65dfc1f">
+        <db:my-sql-connection host="localhost" port="3307" user="root" password="Yash@1319" database="customerdb" />
+    </db:config>
+    <!-- Main API Flow -->
+    <api-gateway:autodiscovery apiId="21216639" ignoreBasePath="false" doc:name="API Autodiscovery" doc:id="a440fc00-9fb2-41b4-b937-2c459a1a330f" flowRef="customer-api-main" />
+	<flow name="customer-api-main">
+        <http:listener config-ref="customer-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="customer-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <!-- Console Flow -->
+    <flow name="customer-api-console">
+        <http:listener config-ref="customer-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="customer-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <!-- Resource Implementation Flows -->
+    <flow name="put:\customers\(id):customer-api-config">
+        <db:update doc:name="Update" doc:id="6cfe2df5-56c6-490c-886f-cc71ac9baf05" config-ref="Database_Config">
+			<db:sql ><![CDATA[UPDATE customers
+SET name = :name,
+    email = :email,
+    city = :city
+WHERE id = :customerId;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+    customerId: attributes.uriParams.'id' as Number,
+    name: payload.name,
+    email: payload.email,
+    city: payload.city
+}]]]></db:input-parameters>
+		</db:update>
+		<choice doc:name="Choice" doc:id="54035286-12da-4b60-956f-71c5eb10ee2a" >
+			<when expression="#[payload.affectedRows == 1]">
+				<ee:transform doc:name="Transform Message" doc:id="fafab482-ed14-493c-91ed-356f5887d002" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    message: "Customer updated successfully"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="b1fc9473-d4b7-4c40-8b77-77d0bdb3ae12" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    message: "Customer not found"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="#[404]" doc:name="Set Variable" doc:id="9a7c3993-e0d7-4665-9e9c-c7459f13ecef" variableName="httpStatus"/>
+			</otherwise>
+		</choice>
+    </flow>
+    <flow name="delete:\customers\(id):customer-api-config">
+        <db:delete doc:name="Delete" doc:id="5a8b0b3e-b495-4025-b6b7-21298687f00a" config-ref="Database_Config">
+			<db:sql ><![CDATA[DELETE FROM customers
+WHERE id = :customerId;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+    customerId: attributes.uriParams.'id' as Number
+}]]]></db:input-parameters>
+		</db:delete>
+		<choice doc:name="Choice" doc:id="cb38d94b-3c74-4d00-b6f8-d8ec2c1182af" >
+			<when expression="#[payload == 1]">
+				<ee:transform doc:name="Transform Message" doc:id="f8bfb002-cba2-4515-a99e-6f65e943bcb9" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    message: "Customer deleted successfully"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="a603fbc1-eede-4d78-8505-0028b50c3828" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    message: "Customer not found"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="#[404]" doc:name="Set Variable" doc:id="29e1ed65-65b8-4dfd-86f1-9046aac24ca7" variableName="httpStatus"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" message="delete:\customers\(id):customer-api-config" />
+    </flow>
+    <!-- GET All Customers -->
+    <flow name="get:\customers:customer-api-config" doc:id="4ea5aa39-511f-4e4b-9a27-d83bb1cbfd05">
+        <db:select doc:name="Select All Customers" doc:id="0265f4ac-fdb6-4d91-9e93-04657e19fb64" config-ref="Database_Config">
+            <db:sql><![CDATA[SELECT * FROM customers;]]></db:sql>
+        </db:select>
+		<set-variable value='GET_ALL' doc:name="Set Variable" doc:id="8c7a4907-82ec-4cda-9811-0496a9719bf7" variableName="operation"/>
+		<flow-ref doc:name="Flow Reference" doc:id="b07a893d-125c-4310-b878-3d760e502810" name="log-customer-operation"/>
+		<ee:transform doc:name="Transform Message" doc:id="3b493e4e-7da2-4708-aa6c-3f426e4d2da2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map (customer) -> {
+    id: customer.id,
+    name: customer.name
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+    <!-- GET Customer by ID -->
+    <sub-flow name="log-customer-operation" doc:id="9bfea437-4559-4cac-9a23-c269e4b271e8" >
+		<logger level="INFO" doc:name="Logger" doc:id="dd766aea-0e23-4c4d-8db9-b6cdc2278907" message='#["Customer operation: " ++ vars.operation]'/>
+		<set-variable value="LOGGED" doc:name="Set Variable" doc:id="f9e8b129-f661-4db5-9e48-052fcc66489e" variableName="logStatus"/>
+	</sub-flow>
+	<flow name="get:\customers\(id):customer-api-config">
+        <!-- 1. Extract URI Parameter -->
+        <ee:transform doc:name="Set Variable ID">
+            <ee:variables>
+                <ee:set-variable variableName="id"><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <!-- 2. Execute SQL Select -->
+        <db:select config-ref="Database_Config" doc:name="Select Customer by ID">
+            <db:sql><![CDATA[SELECT * FROM customers WHERE id = :customerId;]]></db:sql>
+            <db:input-parameters><![CDATA[#[{
+                customerId: vars.id as Number
+            }]]]></db:input-parameters>
+        </db:select>
+        <!-- 3. Check Response and Extract Single Object -->
+        <set-variable value="GET_BY_ID" doc:name="Set Variable" doc:id="6bd29a00-ce7d-47c3-ad4b-527ffe083656" variableName="operation"/>
+		<flow-ref doc:name="Flow Reference" doc:id="73bd04bf-12ea-4218-b69c-156254e26e6b" name="log-customer-operation"/>
+		<choice doc:name="Check if Record Exists">
+            <when expression="#[!isEmpty(payload)]">
+                <ee:transform doc:name="Transform Single Object to JSON">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+            <otherwise>
+                <ee:transform doc:name="Customer Not Found Payload">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "message": "Customer not found"
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <ee:transform doc:name="Set 404 Status Code">
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </otherwise>
+        </choice>
+        <logger level="INFO" message="get:\customers\(id):customer-api-config completed" />
+    </flow>
+    <flow name="post:\customers:customer-api-config">
+		<validation:is-not-null doc:name="Is not null" doc:id="4f098f73-20b9-4373-8de8-fa498ff8c5b0" value="#[payload]"/>
+		<validation:is-not-null doc:name="Is not null" doc:id="a296ea01-4f4f-4070-9f24-a78bbf21115a" value="#[payload.name]"/>
+		<validation:is-not-null doc:name="Is not null" doc:id="d471401f-c8fb-49aa-b042-64c2d59975a1" value="#[payload.email]"/>
+		<validation:is-not-null doc:name="Is not null" doc:id="2ef37f91-adf5-4d96-a315-dc788c2f7c47" value="#[payload.city]"/>
+		<validation:is-not-null doc:name="Is not null" doc:id="b8fbbde9-3a87-451f-a674-db610a4d00c0" value="#[payload.id]"/>
+		<set-variable value="POST" doc:name="Set Variable" doc:id="40491124-afa6-4593-af6c-df53493327c9" variableName="operation"/>
+		<flow-ref doc:name="Flow Reference" doc:id="930bc92a-c6ff-42fb-a355-611838551c31" name="log-customer-operation"/>
+		<logger level="INFO" doc:name="Logger" doc:id="15b94275-dc6d-416f-ba22-759b0bff0d55" message='#["Log status: " ++ vars.logStatus]'/>
+		<try doc:name="Try" doc:id="895537ad-fd52-4fe2-8bfc-908149e26651" >
+			<db:insert doc:name="Insert" doc:id="43700eac-83ca-49c8-9084-97ac48e9fde5" config-ref="Database_Config">
+			<db:sql><![CDATA[INSERT INTO customers (id, name, email, city)
+VALUES (:id, :name, :email, :city);]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+    id: payload.id,
+    name: payload.name,
+    email: payload.email,
+    city: payload.city
+}]]]></db:input-parameters>
+		</db:insert>
+			<error-handler>
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="406035a7-f713-49ae-9508-42a9cbeab3e2" type="DB:QUERY_EXECUTION">
+					<ee:transform doc:name="Transform Message" doc:id="19d20d0d-d556-4961-939d-2173893208d4" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    message: "Customer with this ID already exists"
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<set-variable value="409" doc:name="Set Variable" doc:id="68b347c7-2805-42dc-aa49-682cf350658e" variableName="httpStatus"/>
+				</on-error-propagate>
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="dc5e9f1c-ac67-42c1-ae1f-0da90d39f40f" type="VALIDATION:NULL">
+					<ee:transform doc:name="Transform Message" doc:id="7d2cae7a-ce9b-44e3-9d6f-305ef65d1b1b" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    message: "Required customer field is missing"
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<set-variable value="400" doc:name="Set Variable" doc:id="d0f93f71-faaf-46d7-85ce-0e55555db259" variableName="httpStatus"/>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="Transform Message" doc:id="550796e4-a84f-40e1-afcf-2ca90f06f320">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    message: "Customer created successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[201]" doc:name="Set Variable" doc:id="12e4f619-6206-43fc-9ae2-3118179d735d" variableName="httpStatus" />
+		<logger level="INFO" message="post:\customers:customer-api-config" />
+		<error-handler>
+    		<on-error-continue type="VALIDATION:NULL">
+        		<ee:transform>
+            		<ee:message>
+                		<ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    message: "Required customer field is missing"
+}
+                ]]></ee:set-payload>
+            </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+            </ee:variables>
+        		</ee:transform>
+    </on-error-continue>
+</error-handler>
+    </flow>
+</mule>
