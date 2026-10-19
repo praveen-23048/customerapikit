@@ -9,12 +9,12 @@ http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/m
     <!-- APIKit Router Config -->
     <apikit:config name="customer-api-config" api="customer-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <!-- MySQL Database Config -->
-    <db:config name="Database_Config" doc:name="Database Config" doc:id="1dee4be9-cd42-42ca-af83-55e1282af474">
+    <db:config name="Database_Config" doc:name="Database Config" doc:id="a3d08446-71e4-4e37-873f-5ac7be24813b">
         <db:my-sql-connection host="localhost" port="3307" user="root" password="Yash@1319" database="customerdb" />
     </db:config>
     <!-- Main API Flow -->
-    <api-gateway:autodiscovery apiId="21216639" ignoreBasePath="false" doc:name="API Autodiscovery" doc:id="093cc48b-d9b1-4384-92cc-6217cd74de47" flowRef="customer-api-main" />
-	<flow name="customer-api-main">
+    <api-gateway:autodiscovery apiId="21216639" ignoreBasePath="false" doc:name="API Autodiscovery" doc:id="54ed4a17-c0d7-4e1f-af64-0120fa66c628" flowRef="customer-api-main" />
+    <flow name="customer-api-main">
         <http:listener config-ref="customer-api-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
@@ -136,110 +136,110 @@ output application/json
     </flow>
     <!-- Resource Implementation Flows -->
     <flow name="put:\customers\(id):customer-api-config">
-        <db:update doc:name="Update" doc:id="dce8e22a-38d1-4101-900f-ee37aae3fbf8" config-ref="Database_Config">
-			<db:sql ><![CDATA[UPDATE customers
+        <db:update doc:name="Update" doc:id="1336cefd-88db-4448-bf7e-278ab657d2a4" config-ref="Database_Config">
+            <db:sql><![CDATA[UPDATE customers
 SET name = :name,
     email = :email,
     city = :city
 WHERE id = :customerId;]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
+            <db:input-parameters><![CDATA[#[{
     customerId: attributes.uriParams.'id' as Number,
     name: payload.name,
     email: payload.email,
     city: payload.city
 }]]]></db:input-parameters>
-		</db:update>
-		<choice doc:name="Choice" doc:id="3071f5f8-9dde-44dc-b49b-08838377af83" >
-			<when expression="#[payload.affectedRows == 1]">
-				<ee:transform doc:name="Transform Message" doc:id="0792ad9b-b051-4970-b03d-801ead8299db" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[%dw 2.0
+        </db:update>
+        <choice doc:name="Choice" doc:id="d27acf6a-cd7b-4380-920d-2d0568a4436c">
+            <when expression="#[payload.affectedRows == 1]">
+                <ee:transform doc:name="Transform Message" doc:id="f6f9c565-b450-49d0-831f-b67c3338f811">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
     message: "Customer updated successfully"
 }]]></ee:set-payload>
-					</ee:message>
-				</ee:transform>
-			</when>
-			<otherwise >
-				<ee:transform doc:name="Transform Message" doc:id="7a6741d7-13f2-49a5-85d2-fa20d4bee31b" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[%dw 2.0
+                    </ee:message>
+                </ee:transform>
+            </when>
+            <otherwise>
+                <ee:transform doc:name="Transform Message" doc:id="0e6c1733-23be-4901-8253-fcccca9f1c32">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
     message: "Customer not found"
 }]]></ee:set-payload>
-					</ee:message>
-				</ee:transform>
-				<set-variable value="#[404]" doc:name="Set Variable" doc:id="7b6fe130-c14d-4f88-887c-54363b31e0af" variableName="httpStatus"/>
-			</otherwise>
-		</choice>
+                    </ee:message>
+                </ee:transform>
+                <set-variable value="#[404]" doc:name="Set Variable" doc:id="0a3f479e-084a-4d61-89df-17c1c529c7b7" variableName="httpStatus"/>
+            </otherwise>
+        </choice>
     </flow>
     <flow name="delete:\customers\(id):customer-api-config">
-        <db:delete doc:name="Delete" doc:id="0184d543-0eef-4607-9b79-7dc1e68a3ce9" config-ref="Database_Config">
-			<db:sql ><![CDATA[DELETE FROM customers
+        <db:delete doc:name="Delete" doc:id="5011ebae-5f5d-462d-a0e3-532061584151" config-ref="Database_Config">
+            <db:sql><![CDATA[DELETE FROM customers
 WHERE id = :customerId;]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
+            <db:input-parameters><![CDATA[#[{
     customerId: attributes.uriParams.'id' as Number
 }]]]></db:input-parameters>
-		</db:delete>
-		<choice doc:name="Choice" doc:id="86eedbf0-576b-42c8-b350-0cfb8073df17" >
-			<when expression="#[payload == 1]">
-				<ee:transform doc:name="Transform Message" doc:id="90952dba-d958-48fc-9899-9414b5d0621e" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[%dw 2.0
+        </db:delete>
+        <choice doc:name="Choice" doc:id="1a0c1382-6137-497f-bebc-6843b6b76b14">
+            <when expression="#[payload == 1]">
+                <ee:transform doc:name="Transform Message" doc:id="1ce4d02f-5eb8-4419-a73f-04829972b813">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
     message: "Customer deleted successfully"
 }]]></ee:set-payload>
-					</ee:message>
-				</ee:transform>
-			</when>
-			<otherwise >
-				<ee:transform doc:name="Transform Message" doc:id="f0307782-c6b5-41c2-b603-39248b9f12f8" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[%dw 2.0
+                    </ee:message>
+                </ee:transform>
+            </when>
+            <otherwise>
+                <ee:transform doc:name="Transform Message" doc:id="863e70f0-729e-49b9-9dd7-8c210fbdd16f">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
     message: "Customer not found"
 }]]></ee:set-payload>
-					</ee:message>
-				</ee:transform>
-				<set-variable value="#[404]" doc:name="Set Variable" doc:id="f3f04453-8835-4ee3-991b-4874377820c0" variableName="httpStatus"/>
-			</otherwise>
-		</choice>
-		<logger level="INFO" message="delete:\customers\(id):customer-api-config" />
+                    </ee:message>
+                </ee:transform>
+                <set-variable value="#[404]" doc:name="Set Variable" doc:id="589b7233-23d7-4353-a88f-be7ae6c4725b" variableName="httpStatus"/>
+            </otherwise>
+        </choice>
+        <logger level="INFO" message="delete:\customers\(id):customer-api-config" />
     </flow>
     <!-- GET All Customers -->
-    <flow name="get:\customers:customer-api-config" doc:id="feafb4c1-19b7-435d-8321-33daf4c9574a">
-        <db:select doc:name="Select All Customers" doc:id="bb1167e0-61e6-42e9-9158-fce93b47b7ae" config-ref="Database_Config">
+    <flow name="get:\customers:customer-api-config" doc:id="fe0fe1d4-ab93-4e7c-84e7-51ad1fc76c02">
+        <db:select doc:name="Select All Customers" doc:id="d8de4f3c-1e76-4e52-8bda-93abfd0d4a40" config-ref="Database_Config">
             <db:sql><![CDATA[SELECT * FROM customers;]]></db:sql>
         </db:select>
-		<set-variable value='GET_ALL' doc:name="Set Variable" doc:id="3af65bca-09d0-406c-8f05-b45b67d6584b" variableName="operation"/>
-		<flow-ref doc:name="Flow Reference" doc:id="687b0e8f-146b-47e8-8668-72e8dc9b6394" name="log-customer-operation"/>
-		<ee:transform doc:name="Transform Message" doc:id="dcab4020-0454-45a2-b23b-08b0588ac335" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+        <set-variable value='GET_ALL' doc:name="Set Variable" doc:id="84d68f3c-9d5c-4ce2-ac96-7e0d2f663b64" variableName="operation"/>
+        <flow-ref doc:name="Flow Reference" doc:id="91cbaf73-122d-4246-a1b5-b489bc80da5c" name="log-customer-operation"/>
+        <ee:transform doc:name="Transform Message" doc:id="7ded4fec-22ed-425b-9777-8c41855a5d3f">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 payload map (customer) -> {
     id: customer.id,
     name: customer.name
 }]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
+            </ee:message>
+        </ee:transform>
     </flow>
     <!-- GET Customer by ID -->
-    <sub-flow name="log-customer-operation" doc:id="2b762d99-b129-4ee8-89fd-ecd4bb0de4b6" >
-		<logger level="INFO" doc:name="Logger" doc:id="784932df-d158-4b28-a732-300e18b175b2" message='#["Customer operation: " ++ vars.operation]'/>
-		<set-variable value="LOGGED" doc:name="Set Variable" doc:id="e270515f-1dea-4bf2-88ce-015b3535eaca" variableName="logStatus"/>
-	</sub-flow>
-	<flow name="get:\customers\(id):customer-api-config">
-        <!-- 1. Extract URI Parameter -->
+    <sub-flow name="log-customer-operation" doc:id="3ffc03ff-9e93-4a9e-b700-0099ecafae5d">
+        <logger level="INFO" doc:name="Logger" doc:id="3515503f-f8fa-46f1-bb78-1effe52c8272" message='#["Customer operation: " ++ vars.operation]'/>
+        <set-variable value="LOGGED" doc:name="Set Variable" doc:id="036249b5-6e89-4872-a0cc-3a990c1e1224" variableName="logStatus"/>
+    </sub-flow>
+    <flow name="get:\customers\(id):customer-api-config">
+        <!--Extract URI Parameter-->
         <ee:transform doc:name="Set Variable ID">
             <ee:variables>
                 <ee:set-variable variableName="id"><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
@@ -253,9 +253,9 @@ payload map (customer) -> {
             }]]]></db:input-parameters>
         </db:select>
         <!-- 3. Check Response and Extract Single Object -->
-        <set-variable value="GET_BY_ID" doc:name="Set Variable" doc:id="61555e9a-a235-410a-8fd6-78b368f289d3" variableName="operation"/>
-		<flow-ref doc:name="Flow Reference" doc:id="c9be439b-7acf-4407-bf5c-8720df3c4ec5" name="log-customer-operation"/>
-		<choice doc:name="Check if Record Exists">
+        <set-variable value="GET_BY_ID" doc:name="Set Variable" doc:id="62070d4c-62c1-422d-babf-cded48f0a448" variableName="operation"/>
+        <flow-ref doc:name="Flow Reference" doc:id="4ca65fb5-2746-4c0c-bcb1-3627b460034b" name="log-customer-operation"/>
+        <choice doc:name="Check if Record Exists">
             <when expression="#[!isEmpty(payload)]">
                 <ee:transform doc:name="Transform Single Object to JSON">
                     <ee:message>
@@ -286,66 +286,43 @@ output application/json
         </choice>
         <logger level="INFO" message="get:\customers\(id):customer-api-config completed" />
     </flow>
-    <flow name="post:\customers:customer-api-config">
-		<set-variable value="POST" doc:name="Set Variable" doc:id="e3030276-7ea4-4dab-8b16-b5dc74d5406d" variableName="operation"/>
-		<flow-ref doc:name="Flow Reference" doc:id="21e1d015-4295-470f-8862-de58c6c26562" name="log-customer-operation"/>
-		<logger level="INFO" doc:name="Logger" doc:id="d809f81b-ce75-46df-9e26-e24b981fbd84" message='#["Log status: " ++ vars.logStatus]'/>
-		<try doc:name="Try" doc:id="6710157d-4be1-43de-801b-57a5fcec94f5" >
-			<validation:is-not-null doc:name="Is not null" doc:id="0c369596-9ac4-4b92-b876-f8e7ed977ee6" value="#[payload]"/>
-			<validation:is-not-null doc:name="Is not null" doc:id="12166701-5595-4785-9ee1-434b444c18ce" value="#[payload.name]"/>
-			<validation:is-not-null doc:name="Is not null" doc:id="af06a726-c3ef-4a13-bd4e-6e8318235641" value="#[payload.email]"/>
-			<validation:is-not-null doc:name="Is not null" doc:id="1e865626-908a-4465-95f4-c9f9b87eabc2" value="#[payload.city]"/>
-			<validation:is-not-null doc:name="Is not null" doc:id="75bfde17-a03f-4027-ac94-0039eed65d5c" value="#[payload.id]"/>
-			<db:insert doc:name="Insert" doc:id="e69ab427-ce33-4aa7-b2dc-6041908fa4c8" config-ref="Database_Config">
-				<db:sql><![CDATA[INSERT INTO customers (id, name, email, city)
-VALUES (:id, :name, :email, :city);]]></db:sql>
-				<db:input-parameters><![CDATA[#[{
-    id: payload.id,
-    name: payload.name,
-    email: payload.email,
-    city: payload.city
-}]]]></db:input-parameters>
-			</db:insert>
-			<error-handler>
-				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="c62aa011-74e6-44d5-86e1-4b3d792b8cae" type="DB:QUERY_EXECUTION">
-					<ee:transform doc:name="Transform Message" doc:id="8edd1ddc-f180-42ec-a495-1b97e72c128a" >
-						<ee:message >
-							<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{
-    message: "Customer with this ID already exists"
-}]]></ee:set-payload>
-						</ee:message>
-					</ee:transform>
-					<set-variable value="409" doc:name="Set Variable" doc:id="082e4871-d38b-4b16-a370-01cc09b5007d" variableName="httpStatus"/>
-				</on-error-propagate>
-				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="40f51fcf-083f-4bcb-ba03-9b3efe00218e" type="VALIDATION:NULL">
-					<ee:transform doc:name="Transform Message" doc:id="cc40bba8-62d5-4fb5-8e29-e193e71de465" >
-						<ee:message >
-							<ee:set-payload ><![CDATA[%dw 2.0
+    <flow name="post:\customers:customer-api-config" doc:id="c10050e4-3e0c-42cd-9f97-3a5ad9c9b1f7">
+        <logger level="INFO" doc:name="Logger" message="Customer operation: POST"/>
+		<choice doc:name="Choice" doc:id="0ae457ef-1925-4b8c-b9cf-b1c09fc07409" >
+			<when expression="#[isEmpty(payload.email)]">
+				<ee:transform doc:name="Transform Message" doc:id="dd5a9433-126d-4a5c-80ce-a12b5cede7ad" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
 {
     message: "Required customer field is missing"
 }]]></ee:set-payload>
-						</ee:message>
-					</ee:transform>
-					<set-variable value="400" doc:name="Set Variable" doc:id="fde21d28-5030-4987-b6a8-ecd8c994c77e" variableName="httpStatus"/>
-				</on-error-propagate>
-			</error-handler>
-		</try>
-		<ee:transform doc:name="Transform Message" doc:id="09edb824-427c-4f00-b69f-890434bcc772">
-			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
+					</ee:message>
+				</ee:transform>
+				<set-variable value="400" doc:name="Set Variable" doc:id="28b9b5f0-a8a0-4129-8bdb-03385c55b849" variableName="httpStatus"/>
+			</when>
+			<otherwise >
+				<db:insert doc:name="Insert" config-ref="Database_Config">
+            <db:sql><![CDATA[INSERT INTO customers (id, name, email, city) VALUES (:id, :name, :email, :city)]]></db:sql>
+            <db:input-parameters><![CDATA[#[{
+                id: payload.id,
+                name: payload.name,
+                email: payload.email,
+                city: payload.city
+            }]]]></db:input-parameters>
+        </db:insert>
+				<ee:transform doc:name="Transform Success Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
     message: "Customer created successfully"
 }]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<set-variable value="#[201]" doc:name="Set Variable" doc:id="17281b17-74c3-4143-91ea-b4fbc84edeb3" variableName="httpStatus" />
-		<logger level="INFO" message="post:\customers:customer-api-config" />
+            </ee:message>
+        </ee:transform>
+			</otherwise>
+		</choice>
     </flow>
 </mule>
